@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&amp;display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #ececec;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        #welcome-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #welcome-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #welcome-content h2 {
+            margin: 0 0 10px 0;
+        }
+
+        #welcome-content button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #0084ff;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        #welcome-content button:hover {
+            background-color: #0073e6;
+        }
+
+        #chat-container {
+            width: 100%;
+            max-width: 1099px;
+            height: 100vh;
+            background-color: #fff;
+         /*   border-radius: 5px; */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            visibility: hidden;
+        }
+
+        #header {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #0084ff;
+            color: #fff;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+
+        #header img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        #header h1 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        #chat-window {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border-bottom: 1px solid #ddd;
+            background: #f9f9f9;
+            word-wrap: break-word;
+        }
+
+        .message {
+            margin: 10px 0;
+            opacity: 0;
+            animation: slideIn 0.3s forwards;
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.user .message-text {
+            background-color: #0084ff;
+            color: #fff;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px 20px 0 20px;
+        }
+
+        .message.bot .message-text {
+            background-color: #e5e5ea;
+            color: #000;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 20px 20px 20px 0;
+        }
+
+        .message img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        .message a {
+            color: #0084ff;
+            text-decoration: none;
+        }
+
+        .message a:hover {
+            text-decoration: underline;
+        }
+
+        #input-container {
+            display: flex;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+        }
+
+        #input-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        #input-container button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #0084ff;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 20px;
+            font-size: 16px;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+        }
+
+        #input-container button:hover {
+            background-color: #0073e6;
+        }
+        .loading-dots {
+            display: inline-flex; 
+            align-items: center;
+        }
+
+        .loading-dots::before,
+        .loading-dots::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background-color: #0084ff; 
+            border-radius: 50%;
+            margin: 0 4px; 
+            animation: loading 1s infinite;
+        }
+
+        .loading-dots::after {
+            animation-delay: 0.3s; /* Stagger the animations */
+        }
+
+        @keyframes loading {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+        
+         .message .clock-container {
+            text-align: center;
+            font-size: 12px;
+            color: #555;
+            margin-top: 5px; 
+        }
+        .message-text code {
+            background-color: #bcbcbc;
+            padding: 2px 4px;        
+            border-radius: 4px;        
+            font-family: monospace;   
+        }
+
+        .message.user .clock-container {
+            text-align: right; 
+        }
+
+       
+        .message.bot .clock-container {
+            text-align: left; 
+        }
+        #suggestion-boxes {
+            display: flex; 
+            justify-content: space-around; 
+            margin: 20px auto; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+        }
+
+        .suggestion-box {
+            flex: 1 1 300px; 
+            max-width: 100%; 
+            background-color: #f5f5f5; 
+            padding: 20px;
+            border-radius: 10px;
+            margin: 0 10px; 
+        }
+        
+        #suggestion-box p {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #suggestion-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #suggestion-box li {
+            margin-bottom: 5px;
+        }
+
+        .loading-stars {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .loading-stars .star {
+            font-size: 16px; /* Adjust the star size as needed */
+            color: #0084ff; /* Blue color */
+            margin: 0 4px;   /* Add spacing between stars */
+            animation: twinkle 1s infinite alternate; /* Animation */
+        }
+
+        .loading-stars .star:nth-child(2) {
+            animation-delay: 0.2s; /* Stagger the animation */
+        }
+
+        .loading-stars .star:nth-child(3) {
+            animation-delay: 0.4s; /* Stagger the animation */
+        }
+
+        @keyframes twinkle {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+     
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="welcome-modal">
+        <div id="welcome-content">
+            <img height="100" src="assets/favicon.png" alt="Logo">
+            <h2>Selamat datang di Fumiai</h2>
+            <a href="#">Terms and Services</a><br><br>
+            <button id="continue-button" onclick="sweet2()">chat</button>
+            <button id="continue-button"  onclick="sweet()">docs</button>
+        </div>
+    </div>
+    <div id="chat-container">
+        <div id="header">
+            <img id="logo" src="assets/Shiroko.jpg" alt="Logo">
+            <h1>Alicha Chat</h1> <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16">
+                <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.73 1.73 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.73 1.73 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.73 1.73 0 0 0 3.407 2.31zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/>
+              </svg>
+        </div>
+        <div id="chat-window">
+            <div id="suggestion-boxes">
+                <div class="suggestion-box">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16">
+                        <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.73 1.73 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.73 1.73 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.73 1.73 0 0 0 3.407 2.31zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/>
+                      </svg>
+                 <p>What Alicha Can do?...</p>
+                <ul>
+                    <li>"Can alicha be my wife?"</li>
+                    <li>"/imagine a girl with anime style"</li>
+                    <li>"Who is your creator?"</li>
+                </ul>
+            </div>
+            <div class="suggestion-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16">
+                    <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.73 1.73 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.73 1.73 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.73 1.73 0 0 0 3.407 2.31zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/>
+                  </svg>
+                <p>Try ask alicha...</p>
+               <ul>
+                   <li>"How To Explain Nostalgic to children?"</li>
+                   <li>"/create a man"</li>
+                   <li>"Who is ssa?"</li>
+               </ul>
+           </div>
+           <div class="suggestion-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stars" viewBox="0 0 16 16">
+                <path d="M7.657 6.247c.11-.33.576-.33.686 0l.645 1.937a2.89 2.89 0 0 0 1.829 1.828l1.936.645c.33.11.33.576 0 .686l-1.937.645a2.89 2.89 0 0 0-1.828 1.829l-.645 1.936a.361.361 0 0 1-.686 0l-.645-1.937a2.89 2.89 0 0 0-1.828-1.828l-1.937-.645a.361.361 0 0 1 0-.686l1.937-.645a2.89 2.89 0 0 0 1.828-1.828zM3.794 1.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387A1.73 1.73 0 0 0 4.593 5.69l-.387 1.162a.217.217 0 0 1-.412 0L3.407 5.69A1.73 1.73 0 0 0 2.31 4.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387A1.73 1.73 0 0 0 3.407 2.31zM10.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.16 1.16 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.16 1.16 0 0 0-.732-.732L9.1 2.137a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732z"/>
+              </svg>
+            <p>Also can...</p>
+           <ul>
+               <li>"apa saja yg terjadi di dunia ini?"</li>
+               <li>"carikan sesuatu"</li>
+               <li>"Siapa itu ALICHA"</li>
+           </ul>
+       </div>
+       </div>
+        </div>
+        <div id="input-container">
+            <input type="text" id="input-field" placeholder="Type a message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+    function formatMessage(message) {
+    let formattedMessage = message.replace(/\\n/g, '<br>');
+    formattedMessage = formattedMessage.replace(/\*(.*?)\*/g, '<b>$1</b>');
+    return formattedMessage;
+}
+
+        document.getElementById('continue-button').addEventListener('click', async () => {
+            const welcomeModal = document.getElementById('welcome-modal');
+            const chatContainer = document.getElementById('chat-container');
+            const logo = document.getElementById('logo');
+
+            welcomeModal.style.display = 'none';
+            chatContainer.style.visibility = 'visible';
+
+            logo.src = 'assets/Shiroko.jpg'; // Mengubah logo menjadi centang
+            logo.style.transition = 'transform 0.5s';
+            logo.style.transform = 'rotate(360deg)';
+
+            try {
+                const tokenResponse = await axios.post('/token', {}, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'User-Agent': 'Mozilla/5.0 (Linux; Android 12; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+                        'Time-Stamp': new Date().toISOString()
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        document.getElementById('send-button').addEventListener('click', async () => {
+            const inputField = document.getElementById('input-field');
+            const message = inputField.value.trim();
+            const loadingDots = createLoadingDots();
+    const chatContainer = document.getElementById('chat-window');
+   
+
+            if (message) {
+                const suggestionBox = document.getElementById('suggestion-boxes');
+                suggestionBox.style.display = 'none';
+                addMessageToChat('user', message);
+                inputField.value = '';
+                // Create and add loading dots
+                const loadingDots = createLoadingDots();
+                chatContainer.appendChild(loadingDots);
+
+                try {
+                    const response = await axios.post('/api/post/ajax', {
+                        query: message
+                    }, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'User-Agent': 'Mozilla/5.0 (Linux; Android 12; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
+                            'Time-Stamp': new Date().toISOString()
+                        }
+                    });
+
+                    if (response.status === 200) {
+                        chatContainer.removeChild(loadingDots);
+                        const resultData = response.data.data.result
+                        if (typeof resultData === 'string' && resultData.startsWith('http')) {
+                            addImageToChat('bot', resultData);
+                        } else {
+                            addMessageToChat('bot', resultData);
+                        }
+                    } else {
+                        addMessageToChat('bot', 'Failed to fetch response from server.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    addMessageToChat('bot', error);
+                }
+            }
+        });
+        function createLoadingDots() {
+            const loadingStars = document.createElement('div');
+            loadingStars.className = 'loading-stars';
+            loadingStars.innerHTML = `
+                <img class="star" height="38" src="https://telegra.ph/file/9532c7ff2608f884878c9.png" alt="Star">
+            `; // Three star icons
+            return loadingStars;
+        }
+       async function typeWriterEffect(element, message) {
+            const words = message.split(" ");
+            let currentWordIndex = 0;
+            const typingSpeed = 30; 
+
+            while (currentWordIndex < words.length) {
+                const word = words[currentWordIndex];
+
+                
+                if (word.includes('```')) {
+                   
+                    element.innerHTML += ` <code>${word}</code> `;
+                } else {
+                    for (let i = 0; i <= word.length; i++) {
+                        element.textContent = words.slice(0, currentWordIndex).join(" ") + " " + word.slice(0, i);
+                        await new Promise(resolve => setTimeout(resolve, typingSpeed));
+                    }
+                    element.textContent += " ";
+                }
+
+                currentWordIndex++;
+            }
+
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const clockContainer = document.createElement('div');
+            clockContainer.className = `clock-container bot`; // Assuming bot is the sender
+            clockContainer.innerHTML = `<span class="clock">${timeString}</span>`;
+            element.parentNode.appendChild(clockContainer);
+        }
+
+        function addMessageToChat(sender, message) {
+            const chatWindow = document.getElementById('chat-window');
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${sender}`;
+            if (sender === 'bot') {
+                // Add typing animation for bot responses
+                messageElement.innerHTML = `<div class="message-text typing"></div>`;
+                chatWindow.appendChild(messageElement);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+
+                // Simulate typing effect
+               typeWriterEffect(messageElement.querySelector('.message-text'), message);
+            } else {
+                // For user messages, just add the message and clock
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                messageElement.innerHTML = `
+                    <div class="message-text">${message}</div>
+                    <div class="clock-container ${sender}">
+                        <span class="clock">${timeString}</span>
+                    </div>
+                `;
+                chatWindow.appendChild(messageElement);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+        
+            const clockElement = messageElement.querySelector('.clock');
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            clockElement.textContent = timeString;
+        
+    }
+
+        function addImageToChat(sender, imageUrl) {
+            const chatWindow = document.getElementById('chat-window');
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${sender}`;
+            messageElement.innerHTML = `<img src="${imageUrl}" alt="Generated Image">
+               <span class="clock"></span>
+            `;
+            chatWindow.appendChild(messageElement);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            const clockElement = messageElement.querySelector('.clock');
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); 
+            clockElement.textContent = timeString;
+        
+        }
+    </script>
+    
+    </script>
+<script type="text/javascript">
+  function sweet2() {
+    swal ({
+      title: "Success",
+      text: "enjoy your experience",
+      icon: "success",
+      button: true
+    })
+    
+  }
+  
+  
+</script>
+
+
+<script type="text/javascript">
+  function sweet() {
+    swal({
+      title: "Success",
+      text: "Welcome To Our Documentation",
+      icon: "success",
+      button: true
+    }).then(() => {
+      window.location.href = 'docs.html';
+    });
+  }
+</script>
+
+
+<script src="https://unpkg.com/sweetalert%402.1.2/dist/sweetalert.min.js"></script>
+</body>
+</html>
